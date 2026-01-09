@@ -1,0 +1,122 @@
+services:
+  # PostgreSQL + pgvector (shared database)
+  platform-postgres:
+    image: pgvector/pgvector:pg16
+    container_name: platform-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-platform_dev}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - proxy
+
+  # Redis (shared cache & queues)
+  platform-redis:
+    image: redis:7-alpine
+    container_name: platform-redis
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - proxy
+
+  # Meilisearch (shared search engine)
+  platform-search:
+    image: getmeili/meilisearch:v1.5
+    container_name: platform-search
+    restart: unless-stopped
+    env_file:
+      - .env.ci
+    environment:
+      MEILI_ENV: production
+    volumes:
+      - meilisearch_data:/meili_data
+    networks:
+      - proxy
+
+  # MinIO (shared object storage)
+  platform-objects:
+    image: minio/minio:latest
+    container_name: platform-objects
+    restart: unless-stopped
+    env_file:
+      - .env.ci
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.platform-objects.rule=Host(`${MINIO_DOMAIN}`)
+      - traefik.http.routers.platform-objects.entrypoints=web
+      - traefik.http.services.platform-objects.loadbalancer.server.port=9000
+    volumes:
+      - minio_data:/data
+    networks:
+      - proxy
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MinIO bootstrap (bucket + public policy)
+  platform-objects-init:
+    image: minio/mc:latest
+    container_name: platform-objects-init
+    env_file:
+      - .env.ci
+    depends_on:
+      platform-objects:
+        condition: service_healthy
+    networks:
+      - proxy
+    entrypoint: >
+      /bin/sh -c "
+      echo 'Waiting for MinIO...';
+      sleep 5;
+      /usr/bin/mc alias set platform http://platform-objects:9000 $$MINIO_ACCESS_KEY $$MINIO_SECRET_KEY;
+      /usr/bin/mc mb platform/${PUBLIC_BUCKET_NAME:-uploads} --ignore-existing;
+      /usr/bin/mc anonymous set download platform/${PUBLIC_BUCKET_NAME:-uploads};
+      echo 'Bucket ready: ${PUBLIC_BUCKET_NAME:-uploads}';
+      exit 0;
+      "
+
+  # SMTP (MailHog)
+  platform-mail:
+    image: mailhog/mailhog:v1.0.1
+    container_name: platform-mail
+    restart: unless-stopped
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
+      - traefik.http.routers.platform-mail.rule=Host(`${MAIL_UI_DOMAIN}`)
+      - traefik.http.routers.platform-mail.entrypoints=web
+      - traefik.http.services.platform-mail.loadbalancer.server.port=8025
+    networks:
+      - proxy
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  meilisearch_data:
+    driver: local
+  minio_data:
+    driver: local
+
+networks:
+  proxy:
+    external: true
