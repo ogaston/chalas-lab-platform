@@ -8,6 +8,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
       POSTGRES_DB: ${POSTGRES_DB:-platform_dev}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
@@ -23,6 +25,8 @@ services:
     image: redis:7-alpine
     container_name: platform-redis
     restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
@@ -42,6 +46,8 @@ services:
       - stack.env
     environment:
       MEILI_ENV: production
+    ports:
+      - "${MEILISEARCH_PORT:-7700}:7700"
     volumes:
       - meilisearch_data:/meili_data
     networks:
@@ -104,6 +110,8 @@ services:
     image: mailhog/mailhog:v1.0.1
     container_name: platform-mail
     restart: unless-stopped
+    ports:
+      - "${MAIL_SMTP_PORT:-1025}:1025"
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
