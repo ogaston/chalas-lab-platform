@@ -38,8 +38,6 @@ services:
     image: getmeili/meilisearch:v1.5
     container_name: platform-search
     restart: unless-stopped
-    env_file:
-      - .env.ci
     environment:
       MEILI_ENV: production
     volumes:
@@ -52,8 +50,6 @@ services:
     image: minio/minio:latest
     container_name: platform-objects
     restart: unless-stopped
-    env_file:
-      - .env.ci
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
@@ -75,8 +71,6 @@ services:
   platform-objects-init:
     image: minio/mc:latest
     container_name: platform-objects-init
-    env_file:
-      - .env.ci
     depends_on:
       platform-objects:
         condition: service_healthy
