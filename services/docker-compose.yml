@@ -57,9 +57,15 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
+      # API
       - traefik.http.routers.platform-objects.rule=Host(`${MINIO_DOMAIN:-minio}`)
       - traefik.http.routers.platform-objects.entrypoints=web
       - traefik.http.services.platform-objects.loadbalancer.server.port=9000
+      # Console
+      - traefik.http.routers.platform-objects-console.rule=Host(`${MINIO_CONSOLE_DOMAIN:-minio-console}`)
+      - traefik.http.routers.platform-objects-console.entrypoints=web
+      - traefik.http.routers.platform-objects-console.service=platform-objects-console
+      - traefik.http.services.platform-objects-console.loadbalancer.server.port=9001
     volumes:
       - minio_data:/data
     networks:
