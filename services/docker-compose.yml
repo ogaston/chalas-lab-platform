@@ -121,6 +121,16 @@ services:
     networks:
       - proxy
 
+  platform-tunnel:
+    image: cloudflare/cloudflared:latest
+    container_name: platform-tunnel
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARED_TOKEN}
+    networks:
+      - proxy
+
 volumes:
   postgres_data:
     driver: local
