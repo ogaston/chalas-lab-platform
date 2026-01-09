@@ -38,6 +38,8 @@ services:
     image: getmeili/meilisearch:v1.5
     container_name: platform-search
     restart: unless-stopped
+    env_file:
+      - stack.env
     environment:
       MEILI_ENV: production
     volumes:
@@ -50,10 +52,12 @@ services:
     image: minio/minio:latest
     container_name: platform-objects
     restart: unless-stopped
+    env_file:
+      - stack.env
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
-      - traefik.http.routers.platform-objects.rule=Host(`${MINIO_DOMAIN}`)
+      - traefik.http.routers.platform-objects.rule=Host(`${MINIO_DOMAIN:-minio}`)
       - traefik.http.routers.platform-objects.entrypoints=web
       - traefik.http.services.platform-objects.loadbalancer.server.port=9000
     volumes:
@@ -71,6 +75,8 @@ services:
   platform-objects-init:
     image: minio/mc:latest
     container_name: platform-objects-init
+    env_file:
+      - stack.env
     depends_on:
       platform-objects:
         condition: service_healthy
@@ -95,7 +101,7 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
-      - traefik.http.routers.platform-mail.rule=Host(`${MAIL_UI_DOMAIN}`)
+      - traefik.http.routers.platform-mail.rule=Host(`${MAIL_UI_DOMAIN:-mailhog}`)
       - traefik.http.routers.platform-mail.entrypoints=web
       - traefik.http.services.platform-mail.loadbalancer.server.port=8025
     networks:
