@@ -101,9 +101,9 @@ services:
       /bin/sh -c "
       echo 'Waiting for MinIO...';
       sleep 3;
-      /usr/bin/mc alias set platform http://platform-objects:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
-      /usr/bin/mc mb -p platform/${PUBLIC_BUCKET_NAME:-uploads} --ignore-existing;
-      /usr/bin/mc anonymous set download platform/${PUBLIC_BUCKET_NAME:-uploads};
+      mc alias set platform http://platform-objects:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD;
+      mc mb platform/${PUBLIC_BUCKET_NAME:-uploads} --ignore-existing;
+      mc anonymous set download platform/${PUBLIC_BUCKET_NAME:-uploads};
       echo 'Bucket ready: ${PUBLIC_BUCKET_NAME:-uploads}';
       exit 0;
       "
