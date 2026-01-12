@@ -72,6 +72,7 @@ services:
       # API
       - traefik.http.routers.platform-objects.rule=Host(`${MINIO_DOMAIN}`)
       - traefik.http.routers.platform-objects.entrypoints=web
+      - traefik.http.routers.platform-objects-console.service=platform-objects
       - traefik.http.services.platform-objects.loadbalancer.server.port=9000
     
       # Console
