@@ -61,18 +61,22 @@ services:
     env_file:
       - stack.env
     environment:
-      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
-      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      # reverse-proxy aware URLs
+      MINIO_SERVER_URL: https://${MINIO_DOMAIN}
+      MINIO_BROWSER_REDIRECT_URL: https://${MINIO_CONSOLE_DOMAIN}
     labels:
-      - traefik.enable=true
-      - traefik.docker.network=proxy
       # API
-      - traefik.http.routers.platform-objects.rule=Host(`${MINIO_DOMAIN:-minio}`)
-      - traefik.http.routers.platform-objects.entrypoints=web
+      - traefik.http.routers.platform-objects.rule=Host(`${MINIO_DOMAIN}`)
+      - traefik.http.routers.platform-objects.entrypoints=websecure
+      - traefik.http.routers.platform-objects.tls=true
       - traefik.http.services.platform-objects.loadbalancer.server.port=9000
+    
       # Console
-      - traefik.http.routers.platform-objects-console.rule=Host(`${MINIO_CONSOLE_DOMAIN:-minio-console}`)
-      - traefik.http.routers.platform-objects-console.entrypoints=web
+      - traefik.http.routers.platform-objects-console.rule=Host(`${MINIO_CONSOLE_DOMAIN}`)
+      - traefik.http.routers.platform-objects-console.entrypoints=websecure
+      - traefik.http.routers.platform-objects-console.tls=true
       - traefik.http.routers.platform-objects-console.service=platform-objects-console
       - traefik.http.services.platform-objects-console.loadbalancer.server.port=9001
     volumes:
