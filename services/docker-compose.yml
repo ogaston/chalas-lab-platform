@@ -69,14 +69,12 @@ services:
     labels:
       # API
       - traefik.http.routers.platform-objects.rule=Host(`${MINIO_DOMAIN}`)
-      - traefik.http.routers.platform-objects.entrypoints=websecure
-      - traefik.http.routers.platform-objects.tls=true
+      - traefik.http.routers.platform-objects.entrypoints=web
       - traefik.http.services.platform-objects.loadbalancer.server.port=9000
     
       # Console
       - traefik.http.routers.platform-objects-console.rule=Host(`${MINIO_CONSOLE_DOMAIN}`)
-      - traefik.http.routers.platform-objects-console.entrypoints=websecure
-      - traefik.http.routers.platform-objects-console.tls=true
+      - traefik.http.routers.platform-objects-console.entrypoints=web
       - traefik.http.routers.platform-objects-console.service=platform-objects-console
       - traefik.http.services.platform-objects-console.loadbalancer.server.port=9001
     volumes:
