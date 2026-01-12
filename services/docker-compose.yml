@@ -67,6 +67,8 @@ services:
       MINIO_SERVER_URL: https://${MINIO_DOMAIN}
       MINIO_BROWSER_REDIRECT_URL: https://${MINIO_CONSOLE_DOMAIN}
     labels:
+      - traefik.enable=true
+      - traefik.docker.network=proxy
       # API
       - traefik.http.routers.platform-objects.rule=Host(`${MINIO_DOMAIN}`)
       - traefik.http.routers.platform-objects.entrypoints=web
