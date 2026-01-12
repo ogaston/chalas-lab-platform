@@ -60,6 +60,9 @@ services:
     restart: unless-stopped
     env_file:
       - stack.env
+    environment:
+      MINIO_ACCESS_KEY: ${MINIO_ROOT_USER}
+      MINIO_SECRET_KEY: ${MINIO_ROOT_PASSWORD}
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
@@ -97,9 +100,9 @@ services:
     entrypoint: >
       /bin/sh -c "
       echo 'Waiting for MinIO...';
-      sleep 5;
-      /usr/bin/mc alias set platform http://platform-objects:9000 $$MINIO_ACCESS_KEY $$MINIO_SECRET_KEY;
-      /usr/bin/mc mb platform/${PUBLIC_BUCKET_NAME:-uploads} --ignore-existing;
+      sleep 3;
+      /usr/bin/mc alias set platform http://platform-objects:9000 $$MINIO_ROOT_USER $$MINIO_ROOT_PASSWORD;
+      /usr/bin/mc mb -p platform/${PUBLIC_BUCKET_NAME:-uploads} --ignore-existing;
       /usr/bin/mc anonymous set download platform/${PUBLIC_BUCKET_NAME:-uploads};
       echo 'Bucket ready: ${PUBLIC_BUCKET_NAME:-uploads}';
       exit 0;
