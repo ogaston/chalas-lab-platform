@@ -69,13 +69,14 @@ services:
     labels:
       - traefik.enable=true
       - traefik.docker.network=proxy
-      # API
+    
+      # S3 API (port 9000)
       - traefik.http.routers.platform-objects.rule=Host(`${MINIO_DOMAIN}`)
       - traefik.http.routers.platform-objects.entrypoints=web
-      - traefik.http.routers.platform-objects-console.service=platform-objects
-      - traefik.http.services.platform-objects.loadbalancer.server.port=9000
+      - traefik.http.routers.platform-objects.service=platform-objects-s3
+      - traefik.http.services.platform-objects-s3.loadbalancer.server.port=9000
     
-      # Console
+      # Console UI (port 9001)
       - traefik.http.routers.platform-objects-console.rule=Host(`${MINIO_CONSOLE_DOMAIN}`)
       - traefik.http.routers.platform-objects-console.entrypoints=web
       - traefik.http.routers.platform-objects-console.service=platform-objects-console
@@ -103,7 +104,7 @@ services:
     networks:
       - proxy
     entrypoint: >
-      /bin/sh -c "
+      /bin/sh -ec "
       echo 'Waiting for MinIO...';
       sleep 3;
       mc alias set platform http://platform-objects:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD;
